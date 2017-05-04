@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+
+const mist = require('minimist')
+const bp = require('../')
+const path = require('path')
+const pull = require('pull-stream')
+const { once, asyncMap, map, onEnd } = pull
+const { write, read } = require('pull-files')
+
+const opts = mist(process.argv.slice(2), {
+  boolean: ['create'] 
+})
+
+const inputs = opts._
+
+if (!inputs[0] || !inputs[1]) {
+  console.error('requires bp file and directory')
+  process.exit(1)
+}
+
+if (opts.create) {
+  pull(
+    once(path.join(process.cwd(), inputs[1])),
+    asyncMap(bp.create),
+    map(contents => ({ contents, relative: inputs[0] })),
+    write(process.cwd(), err => {
+      if (err) throw err
+      console.log('finished')
+    })
+  )
+} else {
+  pull(
+    read(inputs[0], process.cwd()),
+    asyncMap((file, done) => {
+      bp.scaffold(file.contents, inputs[1], done)
+    }),
+    onEnd(err => {
+      if (err) throw err
+      console.log('finished')
+    })
+  )
+}

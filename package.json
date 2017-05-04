@@ -1,0 +1,39 @@
+{
+  "name": "bp",
+  "description": "Create boilerplate templates and scaffold them",
+  "version": "0.0.0",
+  "homepage": "https://github.com/jamen/bp",
+  "author": "Jamen Marz (https://git.io/jamen)",
+  "repository": "jamen/creation",
+  "main": "lib",
+  "bin": "bin/bp",
+  "bugs": {
+    "url": "https://github.com/jamen/bp/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "jamen",
+    "boilerplate",
+    "bp",
+    "scaffold",
+    "scaffolding",
+    "generate",
+    "generator",
+    "tool"
+  ],
+  "files": [
+    "bin",
+    "lib"
+  ],
+  "dependencies": {
+    "msgpack5": "^3.4.1",
+    "pixie": "^1.2.0",
+    "pixie-dot": "^3.0.0",
+    "pull-files": "^0.1.0",
+    "pull-notify": "^0.1.1",
+    "pull-prompt": "^0.0.0",
+    "pull-pushable": "^2.0.1",
+    "pull-scan": "^1.0.0",
+    "pull-stream": "^3.5.0"
+  }
+}

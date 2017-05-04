@@ -1,0 +1,4 @@
+{ "prompts": 
+  [ { "name": "kek", 
+      "type": "text", 
+      "message": "hello?" } ] }
