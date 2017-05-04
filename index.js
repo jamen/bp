@@ -2,7 +2,6 @@
 const pull = require('pull-stream')
 const prompt = require('pull-prompt')
 const { read, write } = require('pull-files')
-const { encode, decode } = require('msgpack5')()
 const pixie = require('pixie')
 const dot = require('pixie-dot')
 const path = require('path')
@@ -50,7 +49,7 @@ function create (entry, finish) {
       bp.files = files
       
       // Encode bg object to msgpack
-      finish(null, encode(bp))
+      finish(null, JSON.stringify(bp))
     })
   )
 }
@@ -88,7 +87,7 @@ function scaffold (bp, dest, finish) {
   // Tie everything together
   pull( 
     once(bp),
-    map(decode),
+    map(JSON.parse),
     drain(ask)
   )
 }
@@ -108,7 +107,7 @@ function compile_files (files, push) {
       for (var e = expressions.length; e--;) {
         var expression = expressions[e]
         if (keys.indexOf(expression) === -1) {
-          continue
+          return
         }
       }
 
