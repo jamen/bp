@@ -4,7 +4,7 @@ const prompt = require('pull-prompt')
 const { read, write } = require('pull-files')
 const pixie = require('pixie')
 const dot = require('pixie-dot')
-const path = require('path')
+const { join } = require('path')
 const { empty, map, filter, collect, through, once, asyncMap, onEnd, values, drain } = pull
 const pushable = require('pull-pushable')
 
@@ -18,13 +18,17 @@ function create (entry, finish) {
   
   // Read configuration and add properties to bp object
   function config (file) {
-    if (file.relative === 'boilerplate.json') {
-      const config = require(path.join(file.base, file.relative))
+    const base = file.base
+    const path = file.path
+    const data = file.data
+
+    if (path === 'boilerplate.json') {
+      const config = require(base ? join(base, path) : path)
       Object.assign(bp, config)
       return null
     }
     
-    // Delete the base, we dont need it 
+    // Delete base to save space in .bp file 
     delete file.base
 
     return file
@@ -32,16 +36,17 @@ function create (entry, finish) {
 
   // Prepare the files into templates with pixie
   function preparse (file) {
-    file.contents = pixie(file.contents.toString('utf8'))
+    file.data = pixie(file.data.toString('utf8'))
+    return file
   }
 
   pull(
     // Read directory
-    read('**/*', entry),
+    read(entry + '/**/*'),
     // Find and filter config file
     map(config), filter(),
     // Preparse the files as templates
-    through(preparse),
+    map(preparse),
     // Collect template files
     collect((err, files) => {
       if (err) return finish(err)
@@ -59,7 +64,6 @@ function scaffold (bp, dest, finish) {
   var files = pushable()
 
   function ask (bp) {
-    console.log(bp)
     // Prompt the prompts
     var current = null
     pull(
@@ -78,8 +82,8 @@ function scaffold (bp, dest, finish) {
   // Write files
   pull(
     files, 
-    through(file => {
-      console.log('wrote', file.relative)
+    through(file => { 
+      console.log('wrote', file.path)
     }),  
     write(dest, finish)
   )
@@ -94,15 +98,11 @@ function scaffold (bp, dest, finish) {
 
 function compile_files (files, push) {
   var data = {}
-  var got = false
 
-  return drain(([ key, part ]) => {
-    data[key] = part
-    if (got === false) got = true
-
+  function process () {
     for (var f = files.length; f--;) {
       var file = files[f]
-      var expressions = file.contents[1]
+      var expressions = file.data[1]
       var keys = Object.keys(data)
       for (var e = expressions.length; e--;) {
         var expression = expressions[e]
@@ -111,17 +111,22 @@ function compile_files (files, push) {
         }
       }
 
-      file.contents = dot(file.contents, data)
+      file.data = dot(file.data, data)
+      files.splice(files.indexOf(file), 1)
       push(file)
     }
+  }
+
+  // Try any files that require no data
+  process()
+  return drain(([ key, part ]) => {
+    // Process each new piece of data
+    data[key] = part
+    process()
   }, err => {
-    if (got === false) {
-      for (var i = files.length; i--;) {
-        const file = files[i]
-        file.contents = dot(file.contents, data)
-        push(file)
-      }
-    }
+    if (err) throw err
+    // Process on exit
+    process()
   })
 }
 

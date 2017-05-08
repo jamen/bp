@@ -2,16 +2,19 @@
 
 const mist = require('minimist')
 const bp = require('../')
-const path = require('path')
+const { resolve } = require('path')
 const pull = require('pull-stream')
 const { once, asyncMap, map, onEnd } = pull
 const { write, read } = require('pull-files')
+const envPaths = require('env-paths')
 
 const opts = mist(process.argv.slice(2), {
   boolean: ['create'] 
 })
 
 const inputs = opts._
+
+const paths = envPaths('bp')
 
 if (!inputs[0] || !inputs[1]) {
   console.error('requires bp file and directory')
@@ -20,19 +23,19 @@ if (!inputs[0] || !inputs[1]) {
 
 if (opts.create) {
   pull(
-    once(path.join(process.cwd(), inputs[1])),
+    once(resolve(process.cwd(), inputs[1])),
     asyncMap(bp.create),
-    map(contents => ({ contents, relative: inputs[0] })),
-    write(process.cwd(), err => {
+    map(data => ({ data, path: inputs[0] + '.bp' })),
+    write(paths.data, err => {
       if (err) throw err
       console.log('finished')
     })
   )
 } else {
   pull(
-    read(inputs[0], process.cwd()),
+    read(resolve(paths.data, inputs[0] + '.bp')),
     asyncMap((file, done) => {
-      bp.scaffold(file.contents, inputs[1], done)
+      bp.scaffold(file.data, inputs[1], done)
     }),
     onEnd(err => {
       if (err) throw err
