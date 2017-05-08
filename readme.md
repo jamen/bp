@@ -3,13 +3,13 @@
 > create and use boilerplate
 
 ```sh
-bp <file> <dir> [--create]
+bp <name> <dir> [--create]
 ```
 
- - `file`: Name of the boilerplate file you are creating or using
+ - `name`: Name of the boilerplate file you are creating or using
  - `dir`: The directory you are creating from or scaffolding to
 
-If `--create` is provided, it will create the boilerplate file, otherwise it scaffolds.
+If `--create` is provided, it will create the boilerplate, otherwise it scaffolds.
 
 ## Installation
 
@@ -24,7 +24,7 @@ Here is some examples
 ### Creating boilerplate
 
 ```
-bp js.bp js-boilerplate --create
+bp js js-boilerplate --create
 ```
 
 `js-boilerplate` is a directory that contains any files + a `boilerplate.json`, which may contain:
@@ -45,5 +45,5 @@ bp js.bp js-boilerplate --create
 To scaffold just provide boilerplate file and destination:
 
 ```sh
-bp js.bp my-project
+bp js my-project
 ```
